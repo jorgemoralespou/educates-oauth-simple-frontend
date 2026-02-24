@@ -1,0 +1,25 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: educates-frontend
+  namespace: #@ data.values.namespace
+spec:
+  rules:
+    - host: #@ "portal.{}".format(data.values.domain)
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: educates-frontend
+                port:
+                  number: 80
+  #@ if data.values.ingress.tlsSecretRef:                
+  tls:
+    - hosts:
+      - #@ "portal.{}".format(data.values.domain)
+      secretName: #@ data.values.ingress.tlsSecretRef.name
+  #@ end

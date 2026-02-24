@@ -1,0 +1,33 @@
+{
+  "title": "Educates Workshop Portal",
+  "description": "Access your workshop sessions",
+  "homeUrl": "http://localhost:3000",
+  "authBeforeCatalog": true,
+  "betterAuth": {
+    "secret": "generate-with-openssl-rand-base64-32",
+    "baseURL": "http://localhost:3000"
+  },
+  "authProviders": {
+    "static": [
+      { "email": "user@example.com", "password": "changeme", "name": "Example User" }
+    ],
+    "microsoft": { "clientId": "", "clientSecret": "", "tenantId": "common" },
+    "github": { "clientId": "", "clientSecret": "" },
+    "google": { "clientId": "", "clientSecret": "" }
+  },
+  "portals": [
+    {
+      "title": "Example Workshop",
+      "description": "Description of the workshop",
+      "workshopName": "workshop-name-here"
+    }
+  ],
+  "educates": {
+    "lookupServiceUrl": "https://lookup.example.com",
+    "tenantName": "default",
+    "credentials": {
+      "username": "tenant-user",
+      "password": "changeme"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+/*
+ * Theme override file for Educates OAuth Simple Frontend.
+ *
+ * Copy this file to "theme.css" in the same directory and customize
+ * the CSS custom properties below to change the look and feel.
+ *
+ * Only include the variables you want to override — defaults are
+ * defined in src/app/globals.css.
+ */
+
+:root {
+  /* Header */
+  --header-bg: #1a1f36;
+  --header-text: #ffffff;
+  --header-link-hover: #d1d5db;
+
+  /* Page background */
+  --page-bg: #f5f7fa;
+
+  /* Cards */
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+
+  /* Primary action color (buttons, focus rings) */
+  --primary: #4285f4;
+  --primary-hover: #3367d6;
+  --primary-text: #ffffff;
+
+  /* Form inputs */
+  --input-border: #d1d5db;
+  --input-focus-ring: #4285f4;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+
+  /* Misc */
+  --error-text: #dc2626;
+  --divider: #d1d5db;
+}

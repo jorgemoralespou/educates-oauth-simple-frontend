@@ -1,0 +1,13 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: educates-frontend
+  namespace: #@ data.values.namespace
+spec:
+  selector:
+    app: educates-frontend
+  ports:
+    - port: 80
+      targetPort: 3000

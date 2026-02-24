@@ -1,0 +1,51 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: educates-frontend
+  namespace: #@ data.values.namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: educates-frontend
+  template:
+    metadata:
+      labels:
+        app: educates-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: #@ data.values.image
+          ports:
+            - containerPort: 3000
+          env:
+            - name: CONFIG_DIR
+              value: /app/config
+            - name: NODE_EXTRA_CA_CERTS
+              value: /opt/certs/Cluster_Ingress_CA.pem
+          volumeMounts:
+            - name: site-config
+              mountPath: /app/config/site.json
+              subPath: site.json
+              readOnly: true
+            - name: data
+              mountPath: /app/data
+            #@ if data.values.ingress.caSecretRef:
+            - mountPath: /opt/certs/Cluster_Ingress_CA.pem
+              name: workshop-ca
+              subPath: ca.crt
+            #@ end
+      volumes:
+        - name: site-config
+          secret:
+            secretName: educates-frontend-site-config
+        - name: data
+          emptyDir: {}
+        #@ if data.values.ingress.caSecretRef:
+        - name: workshop-ca
+          secret:
+            defaultMode: 420
+            secretName: #@ data.values.ingress.caSecretRef.name
+        #@ end
