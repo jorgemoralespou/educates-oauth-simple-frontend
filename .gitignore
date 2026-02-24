@@ -14,7 +14,6 @@ build/
 .env.*.local
 
 # site config (contains secrets)
-config/site.json
 values.yaml
 
 # debug
