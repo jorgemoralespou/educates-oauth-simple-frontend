@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN mkdir -p data && npm run build
+RUN mkdir -p data public && npm run build
 
 FROM node:24-trixie AS runner
 WORKDIR /app
