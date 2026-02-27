@@ -7,17 +7,22 @@ A simple Next.js web application that provides authentication via username/passw
 ```
 ├── config/
 │   ├── site.json.example           # Main configuration template
-│   └── theme.css.example           # Theme override template
+│   ├── theme.css.example           # Theme override template
+│   └── logo.svg|png|jpg|webp       # (optional) Custom logo for the header
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx              # Root layout (loads theme CSS)
 │   │   ├── page.tsx                # Home — login or portal depending on config
 │   │   ├── login/page.tsx          # Dedicated login page with returnTo support
 │   │   ├── portal/page.tsx         # Protected portal tiles page
+│   │   ├── courses/
+│   │   │   ├── page.tsx            # Course catalog page
+│   │   │   └── [slug]/page.tsx     # Individual course detail page
 │   │   └── api/
 │   │       ├── auth/
 │   │       │   ├── [...all]/route.ts         # Better Auth handler
 │   │       │   └── credential-login/route.ts # Username/password login
+│   │       ├── logo/route.ts       # Serves custom logo from config
 │   │       └── workshops/[name]/route.ts     # Educates session request
 │   ├── lib/
 │   │   ├── auth.ts               # Better Auth config (SQLite + conditional providers)
@@ -27,19 +32,23 @@ A simple Next.js web application that provides authentication via username/passw
 │   ├── components/
 │   │   ├── Header.tsx            # Dark header with logo + nav
 │   │   ├── LoginButtons.tsx      # Login form + optional social buttons
-│   │   ├── PortalCard.tsx        # Workshop tile card
-│   │   ├── PortalView.tsx        # Portal display with autoLaunch support
+│   │   ├── CourseCard.tsx         # Course card for catalog view
+│   │   ├── CourseView.tsx         # Course detail with workshop list
+│   │   ├── WorkshopCard.tsx       # Workshop tile card
+│   │   ├── WorkshopView.tsx       # Workshop display with autoLaunch support
 │   │   └── UserMenu.tsx          # Sign out button
+│   ├── instrumentation.ts        # OpenTelemetry / startup instrumentation
 │   └── middleware.ts             # Route protection for /portal
 ├── scripts/
 │   ├── migrate-db.js             # Auto-runs Better Auth schema migration
 │   └── better-auth-schema.sql    # SQLite schema definition
 ├── k8s/
+│   ├── generate-secret.sh        # Generates the config Secret from local files
 │   ├── application/              # ytt templates for the frontend
 │   │   ├── 01-namespace.yaml
-│   │   ├── 02-secret.yaml        # site.json Secret from values
+│   │   ├── 02-secret.yaml        # Config Secret (site.json, theme.css, logo.*)
 │   │   ├── 02-secretcopier.yaml  # Copies TLS/CA secrets via Educates SecretCopier
-│   │   ├── 03-deployment.yaml    # With conditional CA cert volume
+│   │   ├── 03-deployment.yaml    # Mounts individual config files from Secret
 │   │   ├── 04-service.yaml       # Port 80 → 3000
 │   │   └── 05-ingress.yaml       # Host-based routing with optional TLS
 │   └── lookup/
@@ -87,7 +96,7 @@ A simple Next.js web application that provides authentication via username/passw
 
 ## Configuration
 
-All application configuration lives in a single `config/site.json` file. When deploying to Kubernetes, this file is generated from `values.yaml` via ytt.
+All application configuration lives in the `config/` directory. The main configuration file is `config/site.json`, with optional `theme.css` and logo files alongside it. When deploying to Kubernetes, these files are bundled into a single Secret (see [Configuration Secret](#configuration-secret)).
 
 ### Site Configuration (`config/site.json`)
 
@@ -109,11 +118,21 @@ All application configuration lives in a single `config/site.json` file. When de
     "github": { "clientId": "", "clientSecret": "" },
     "google": { "clientId": "", "clientSecret": "" }
   },
-  "portals": [
+  "courses": [
     {
-      "title": "Spring Boot on Kubernetes",
-      "description": "Introduction to Spring Boot on Kubernetes",
-      "workshopName": "spring-boot-on-k8s"
+      "name": "Example Course",
+      "slug": "example-course",
+      "description": "An example course with introductory workshops",
+      "difficulty": "beginner",
+      "workshops": [
+        {
+          "title": "Example Workshop",
+          "description": "Description of the workshop",
+          "workshopName": "workshop-name-here",
+          "difficulty": "beginner",
+          "duration": "30m"
+        }
+      ]
     }
   ],
   "educates": {
@@ -139,10 +158,15 @@ All application configuration lives in a single `config/site.json` file. When de
 | `authProviders.microsoft` | Microsoft OAuth — set `clientId` and `clientSecret` to enable. Optional `tenantId` (defaults to `common`) |
 | `authProviders.github` | GitHub OAuth — set `clientId` and `clientSecret` to enable |
 | `authProviders.google` | Google OAuth — set `clientId` and `clientSecret` to enable |
-| `portals` | Array of workshop tiles (`title`, `description`, `workshopName`) |
+| `courses` | Array of courses, each containing a `name`, `slug`, `description`, optional `difficulty`, and a `workshops` array |
+| `courses[].workshops` | Array of workshops within a course (`title`, `description`, `workshopName`, optional `difficulty` and `duration`) |
 | `educates` | Educates Lookup Service connection settings |
 
 Social login buttons appear only when the corresponding `clientId` is set to a non-empty value. You can enable any combination, or none at all for a credentials-only setup.
+
+### Custom Logo
+
+Place a logo file in the `config/` directory to replace the default header logo. Supported formats: `logo.svg`, `logo.png`, `logo.jpg`, `logo.jpeg`, `logo.webp`. The first file found (in that order) is used. The logo is served via the `/api/logo` endpoint.
 
 ### Theme Customization (`config/theme.css`)
 
@@ -179,7 +203,9 @@ Social login buttons (Microsoft, GitHub, Google) appear only when the correspond
 ## Key Flows
 
 - **Login**: `/` shows email/password form (and optional social buttons) → redirects to `/portal` on success (when `authBeforeCatalog` is `true`)
-- **Public catalog**: When `authBeforeCatalog` is `false`, `/` shows the workshop catalog directly with an option to log in
+- **Public catalog**: When `authBeforeCatalog` is `false`, `/` shows the course catalog directly with an option to log in
+- **Course catalog**: `/courses` lists all available courses as cards
+- **Course detail**: `/courses/[slug]` shows the workshops within a course
 - **Workshop start**: Click "Start workshop" → calls `/api/workshops/[name]` → backend calls Educates Lookup Service `POST /api/v1/workshops` → returns `sessionActivationUrl` → browser redirects to the workshop session
 - **Auto-launch**: Navigate to `/?autoLaunch=workshop-name` to automatically start a workshop after page load
 
@@ -211,7 +237,54 @@ Ensure `config/site.json` exists in the mounted volume with at minimum the `bett
 
 ## Kubernetes Deployment
 
-The Kubernetes manifests use [ytt](https://carvel.dev/ytt/) templates. All configuration, including the `site.json` content, is driven from a single `values.yaml` file.
+The Kubernetes manifests use [ytt](https://carvel.dev/ytt/) templates. The deployment mounts individual configuration files (`site.json`, `theme.css`, logo images) from a single Kubernetes Secret into the pod.
+
+### Configuration Secret
+
+The configuration Secret (`educates-frontend-config`) contains all the files from your `config/` directory, base64-encoded. You can generate it using the provided helper script:
+
+```bash
+k8s/generate-secret.sh [OPTIONS] [CONFIG_DIR]
+```
+
+The script reads your `config/` directory and produces a Secret manifest containing:
+
+| File | Required | Description |
+|---|---|---|
+| `site.json` | Yes | Main site configuration |
+| `theme.css` | No | Custom CSS theme overrides |
+| `logo.svg`, `logo.png`, `logo.jpg`, `logo.jpeg`, `logo.webp` | No | Custom logo for the header |
+
+Options:
+
+| Flag | Description |
+|---|---|
+| `-o, --output FILE` | Write manifest to a file instead of stdout |
+| `-n, --name NAME` | Secret name (default: `educates-frontend-config`) |
+| `-N, --namespace NS` | Namespace (default: `educates-portal`) |
+
+Examples:
+
+```bash
+# Generate from ./config and print to stdout
+k8s/generate-secret.sh
+
+# Generate from a custom config directory
+k8s/generate-secret.sh /path/to/config
+
+# Write to a file with custom secret name and namespace
+k8s/generate-secret.sh -n my-secret -N my-ns -o secret.yaml /path/to/config
+```
+
+The Deployment mounts each file from the Secret individually into `/app/config/` using `subPath`, so the application sees them as regular files:
+
+```
+/app/config/site.json
+/app/config/theme.css
+/app/config/logo.svg
+/app/config/logo.png
+...
+```
 
 ### 1. Create your values file
 
@@ -219,7 +292,7 @@ The Kubernetes manifests use [ytt](https://carvel.dev/ytt/) templates. All confi
 cp values.yaml.example values.yaml
 ```
 
-Edit `values.yaml` to set your image, domain, namespace, TLS/CA secret references, and the full site configuration:
+Edit `values.yaml` to set your image, domain, namespace, and TLS/CA secret references:
 
 ```yaml
 #@data/values
@@ -234,28 +307,6 @@ ingress:
   caSecretRef:
     name: example.com-ca
     namespace: educates-secrets
-siteConfig:
-  title: "Educates Workshop Portal"
-  homeUrl: "https://portal.example.com"
-  authBeforeCatalog: true
-  betterAuth:
-    secret: "generate-with-openssl-rand-base64-32"
-    baseURL: https://portal.example.com
-  authProviders:
-    static:
-      - email: admin@example.com
-        password: changeme
-        name: Admin User
-  portals:
-    - title: "My Workshop"
-      description: "Workshop description"
-      workshopName: "my-workshop"
-  educates:
-    lookupServiceUrl: https://lookup.example.com
-    tenantName: default
-    credentials:
-      username: tenant-user
-      password: changeme
 ```
 
 | Value | Description |
@@ -265,11 +316,16 @@ siteConfig:
 | `namespace` | Kubernetes namespace to deploy into |
 | `ingress.tlsSecretRef` | Reference to a TLS Secret for HTTPS (name + source namespace). Set to empty to disable TLS |
 | `ingress.caSecretRef` | Reference to a CA Secret for trusting self-signed certificates when calling the Lookup Service. Set to empty to disable |
-| `siteConfig` | Full site configuration — rendered as `site.json` inside the pod |
 
 When `tlsSecretRef` and `caSecretRef` are set, an Educates `SecretCopier` resource is created to copy those secrets into the target namespace.
 
-### 2. Deploy with ytt
+### 2. Generate and apply the config Secret
+
+```bash
+k8s/generate-secret.sh -N educates-portal -o k8s/application/02-secret.yaml
+```
+
+### 3. Deploy with ytt
 
 Render and apply the manifests:
 
@@ -277,7 +333,7 @@ Render and apply the manifests:
 ytt -f values.yaml -f k8s/application/ | kubectl apply -f -
 ```
 
-This creates the namespace, a Secret containing `site.json`, the Deployment, Service, and Ingress. The Deployment mounts `site.json` from the Secret and uses an `emptyDir` volume for the SQLite database. On startup, the container runs the schema migration automatically.
+This creates the namespace, the config Secret, the Deployment, Service, and Ingress. The Deployment mounts the individual config files from the Secret and uses an `emptyDir` volume for the SQLite database. On startup, the container runs the schema migration automatically.
 
 ### Educates Lookup Service Resources
 

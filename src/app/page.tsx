@@ -1,16 +1,12 @@
 import { auth, enabledSocialProviders, hasStaticUsers } from "@/lib/auth";
-import { getSiteConfig } from "@/lib/config";
+import { getLogoUrl, getSiteConfig } from "@/lib/config";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/Header";
 import { LoginButtons } from "@/components/LoginButtons";
-import { PortalView } from "@/components/PortalView";
+import { CourseView } from "@/components/CourseView";
 
-interface RootPageProps {
-  searchParams: Promise<{ autoLaunch?: string }>;
-}
-
-export default async function RootPage({ searchParams }: RootPageProps) {
+export default async function RootPage() {
   const site = getSiteConfig();
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -18,12 +14,12 @@ export default async function RootPage({ searchParams }: RootPageProps) {
 
   if (site.authBeforeCatalog) {
     if (session) {
-      redirect("/portal");
+      redirect("/courses");
     }
 
     return (
       <>
-        <Header siteTitle={site.title} />
+        <Header siteTitle={site.title} logoUrl={getLogoUrl()} />
         <main className="flex items-center justify-center min-h-[calc(100vh-56px)]">
           <div className="rounded-lg shadow-md p-8 max-w-md w-full mx-4" style={{ backgroundColor: 'var(--card-bg)' }}>
             <h1 className="text-2xl font-bold text-center mb-6">
@@ -36,6 +32,5 @@ export default async function RootPage({ searchParams }: RootPageProps) {
     );
   }
 
-  const { autoLaunch } = await searchParams;
-  return <PortalView session={session} autoLaunchWorkshop={autoLaunch} />;
+  return <CourseView session={session} />;
 }

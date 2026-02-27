@@ -1,9 +1,9 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
-const authBeforeCatalog = process.env.AUTH_BEFORE_CATALOG !== "false";
-
 export async function middleware(request: NextRequest) {
+  const authBeforeCatalog = process.env.AUTH_BEFORE_CATALOG !== "false";
+
   if (!authBeforeCatalog) {
     return NextResponse.next();
   }
@@ -16,5 +16,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/portal"],
+  matcher: ["/portal", "/courses", "/courses/:path*"],
 };

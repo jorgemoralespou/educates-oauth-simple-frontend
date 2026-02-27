@@ -15,11 +15,21 @@
     "github": { "clientId": "", "clientSecret": "" },
     "google": { "clientId": "", "clientSecret": "" }
   },
-  "portals": [
+  "courses": [
     {
-      "title": "Example Workshop",
-      "description": "Description of the workshop",
-      "workshopName": "workshop-name-here"
+      "name": "Example Course",
+      "slug": "example-course",
+      "description": "An example course with introductory workshops",
+      "difficulty": "beginner",
+      "workshops": [
+        {
+          "title": "Example Workshop",
+          "description": "Description of the workshop",
+          "workshopName": "workshop-name-here",
+          "difficulty": "beginner",
+          "duration": "30m"
+        }
+      ]
     }
   ],
   "educates": {

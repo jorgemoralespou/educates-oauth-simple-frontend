@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getSiteConfig, getThemeCSS } from "@/lib/config";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const site = getSiteConfig();
 
 export const metadata: Metadata = {

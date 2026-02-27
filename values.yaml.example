@@ -10,39 +10,3 @@ ingress:
   caSecretRef:
     name: example.com-ca
     namespace: educates-secrets
-#! The schema for the siteConfig down here is from the example site.json.example file
-siteConfig:
-  title: "Educates Workshop Portal (DEMO)"
-  description: "Access your workshop sessions"
-  homeUrl: "https://portal.example.com"
-  authBeforeCatalog: true
-  betterAuth:
-    secret: "changeme-generate-with-openssl-rand-base64-32"
-    baseURL: https://portal.example.com
-  authProviders:
-    static:
-      - email: user@example.com
-        password: password
-        name: Example User
-    microsoft:
-      clientId: ""
-      clientSecret: ""
-      tenantId: ""
-    github:
-      clientId: ""
-      clientSecret: ""
-    google:
-      clientId: ""
-      clientSecret: ""
-  portals:
-    - title: "title-here"
-      description: "description-here"
-      workshopName: "workshop-name-here"
-    - title: "title-here-2"
-      description: "description-here-2"
-      workshopName: "workshop-name-here-2"
-  educates:
-    lookupServiceUrl: https://lookup.example.com
-    credentials:
-      username: tenant-user
-      password: changeme

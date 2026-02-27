@@ -18,7 +18,8 @@ export async function GET(
 
   const { name: workshopName } = await params;
   const { homeUrl } = getSiteConfig();
-  const clientIndexUrl = `${homeUrl.replace(/\/+$/, "")}/portal`;
+  const returnPath = request.nextUrl.searchParams.get("returnPath") || "/portal";
+  const clientIndexUrl = `${homeUrl.replace(/\/+$/, "")}${returnPath}`;
 
   try {
     const result = await requestWorkshopSession(
