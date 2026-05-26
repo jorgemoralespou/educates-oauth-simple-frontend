@@ -1,0 +1,27 @@
+name: Chainloop Keyless Attestation
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC keyless auth
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Chainloop CLI
+        run: curl -sfL https://dl.chainloop.dev/cli/install.sh | bash -s
+
+      - name: Init attestation (keyless)
+        run: |
+          chainloop att init \
+            --project  \
+            --workflow 
+
+      - name: Push attestation
+        run: chainloop attestation push
