@@ -28,6 +28,5 @@ data/
 next-env.d.ts
 
 # AI tools
-.claude
 
 .test.*/
