@@ -54,6 +54,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Scan for vulnerabilities with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: sarif
+          output: trivy-results.sarif
+
       - name: Install Chainloop CLI
         run: curl -sfL https://dl.chainloop.dev/cli/install.sh | bash -s
 
@@ -68,6 +82,18 @@ jobs:
           chainloop attestation add \
             --name my-container-image \
             --value ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+      - name: Add SBOM material
+        run: |
+          chainloop attestation add \
+            --name sbom \
+            --value sbom.cyclonedx.json
+
+      - name: Add vulnerability report material
+        run: |
+          chainloop attestation add \
+            --name vulnerability-report \
+            --value trivy-results.sarif
 
       - name: Push attestation
         run: chainloop attestation push
