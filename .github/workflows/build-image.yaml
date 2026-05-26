@@ -83,7 +83,8 @@ jobs:
         run: |
           chainloop attestation init \
             --workflow educates-simple-oauth-frontend \
-            --project educates-simple-oauth-frontend
+            --project educates-simple-oauth-frontend \
+            --collectors aiagent
 
       - name: Add container image material
         run: |
