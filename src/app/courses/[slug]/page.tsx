@@ -15,7 +15,7 @@ export default async function CourseDetailPage({ params, searchParams }: CourseD
     headers: await headers(),
   });
 
-  if (site.authBeforeCatalog && !session) {
+  if (site.requireAuth && !site.showCatalogUnauthenticated && !session) {
     redirect("/");
   }
 

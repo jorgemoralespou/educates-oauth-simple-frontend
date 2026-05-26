@@ -2,7 +2,9 @@
   "title": "Educates Workshop Portal",
   "description": "Access your workshop sessions",
   "homeUrl": "http://localhost:3000",
-  "authBeforeCatalog": true,
+  "backend": "lookup-service",
+  "requireAuth": true,
+  "showCatalogUnauthenticated": false,
   "betterAuth": {
     "secret": "generate-with-openssl-rand-base64-32",
     "baseURL": "http://localhost:3000"
@@ -32,12 +34,17 @@
       ]
     }
   ],
-  "educates": {
+  "lookupService": {
     "lookupServiceUrl": "https://lookup.example.com",
     "tenantName": "default",
     "credentials": {
       "username": "tenant-user",
       "password": "changeme"
     }
+  },
+  "sessionBouncer": {
+    "bouncerUrl": "https://bouncer.example.com",
+    "issuer": "my-frontend",
+    "trustedVoucher": true
   }
 }

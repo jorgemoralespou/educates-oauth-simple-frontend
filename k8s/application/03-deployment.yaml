@@ -25,6 +25,13 @@ spec:
               value: /app/config
             - name: NODE_EXTRA_CA_CERTS
               value: /opt/certs/Cluster_Ingress_CA.pem
+            #@ if hasattr(data.values, "voucherSigningKeySecretRef") and data.values.voucherSigningKeySecretRef:
+            - name: VOUCHER_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: #@ data.values.voucherSigningKeySecretRef.name
+                  key: #@ data.values.voucherSigningKeySecretRef.key or "signing-key"
+            #@ end
           volumeMounts:
             - name: config
               mountPath: /app/config/site.json
@@ -32,7 +39,7 @@ spec:
               readOnly: true
             - name: data
               mountPath: /app/data
-            #@ if data.values.ingress.caSecretRef:
+            #@ if hasattr(data.values, "ingress") and hasattr(data.values.ingress, "caSecretRef"):
             - mountPath: /opt/certs/Cluster_Ingress_CA.pem
               name: workshop-ca
               subPath: ca.crt
@@ -67,7 +74,7 @@ spec:
             secretName: educates-frontend-config
         - name: data
           emptyDir: {}
-        #@ if data.values.ingress.caSecretRef:
+        #@ if hasattr(data.values, "ingress") and hasattr(data.values.ingress, "caSecretRef") and data.values.ingress.caSecretRef:
         - name: workshop-ca
           secret:
             defaultMode: 420

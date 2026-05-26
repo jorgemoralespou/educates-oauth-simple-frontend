@@ -1,0 +1,19 @@
+apiVersion: bouncer.educates.dev/v1beta1
+kind: AuthProviderConfig
+metadata:
+  name: github
+  namespace: educates-config
+spec:
+  type: github               # github, google, oidc, anonymous
+  displayName: "GitHub"
+  credentials:
+    clientId: "Ov23liRQr6Cxt0B3nDP4"
+    clientSecret:
+      secretKeyRef:
+        name: github-oauth-secret
+        key: client-secret
+  claimMappings:
+    subject: id
+    email: email
+    name: name
+    username: login

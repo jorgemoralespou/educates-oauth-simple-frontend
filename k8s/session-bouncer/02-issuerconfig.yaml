@@ -1,0 +1,48 @@
+apiVersion: bouncer.educates.dev/v1beta1
+kind: IssuerConfig
+metadata:
+  name: test-issuer
+  namespace: educates-config
+spec:
+  signingKey:
+    secretKeyRef:
+      name: voucher-signing-key
+      key: secret
+    algorithm: HS256           # or RS256
+  authProviders:
+    - github                   # References AuthProviderConfig names
+  # Optional: access code gate
+  # accessCode:
+  #   secretKeyRef:
+  #     name: access-code-secret
+  #     key: code
+  # Optional: validity window
+  # validFrom: "2026-01-01T00:00:00Z"
+  # validUntil: "2026-12-31T23:59:59Z"
+  # Optional: filter clusters
+  # clusters:
+  #   nameSelector:
+  #     matchNames: [prod-cluster]
+  #   labelSelector:
+  #     matchLabels:
+  #       - name: environment
+  #         value: production
+  # Optional: filter training portals
+  # portals:
+  #   labelSelector:
+  #     matchLabels:
+  #       - name: tier
+  #         value: standard
+  # Optional: authorization webhook
+  authorization:
+    webhookUrl: https://authz-analytics-server.educates.test/authorize
+    headers:
+      - name: Authorization
+        value: "Bearer bouncertoken"
+
+  # Optional: analytics endpoint
+  # analytics:
+  #   webhookUrl: https://authz-analytics-server.educates.test/events
+
+  # Optional: fallback index URL
+  # indexUrl: https://portals.example.com/index

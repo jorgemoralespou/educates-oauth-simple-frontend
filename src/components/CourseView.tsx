@@ -9,7 +9,7 @@ interface CourseViewProps {
 export function CourseView({ session }: CourseViewProps) {
   const site = getSiteConfig();
   const courses = getCourses();
-  const homeHref = site.authBeforeCatalog ? "/courses" : "/";
+  const homeHref = site.requireAuth && !site.showCatalogUnauthenticated ? "/courses" : "/";
 
   return (
     <>

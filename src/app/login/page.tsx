@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const site = getSiteConfig();
-  const homeHref = site.authBeforeCatalog ? "/portal" : "/";
+  const homeHref = site.requireAuth && !site.showCatalogUnauthenticated ? "/courses" : "/";
 
   return (
     <>

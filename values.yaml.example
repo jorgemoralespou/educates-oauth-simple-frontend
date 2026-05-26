@@ -10,3 +10,7 @@ ingress:
   caSecretRef:
     name: example.com-ca
     namespace: educates-secrets
+#! Optional: reference to a Secret containing the voucher signing key (for session-bouncer backend)
+#! voucherSigningKeySecretRef:
+#!   name: voucher-signing-key
+#!   key: signing-key

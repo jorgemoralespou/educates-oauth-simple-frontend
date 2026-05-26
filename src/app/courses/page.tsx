@@ -10,7 +10,7 @@ export default async function CoursesPage() {
     headers: await headers(),
   });
 
-  if (site.authBeforeCatalog && !session) {
+  if (site.requireAuth && !site.showCatalogUnauthenticated && !session) {
     redirect("/");
   }
 

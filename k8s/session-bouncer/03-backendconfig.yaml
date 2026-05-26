@@ -1,0 +1,16 @@
+apiVersion: bouncer.educates.dev/v1beta1
+kind: BackendConfig
+metadata:
+  name: local-cluster
+  namespace: educates-config
+spec:
+  labels:
+    - name: environment
+      value: production
+  # For remote clusters:
+  # credentials:
+  #   kubeconfig:
+  #     secretKeyRef:
+  #       name: kubeconfig-secret
+  #       key: config
+  #     context: "production"

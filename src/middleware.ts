@@ -2,9 +2,14 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const authBeforeCatalog = process.env.AUTH_BEFORE_CATALOG !== "false";
+  const requireAuth = process.env.REQUIRE_AUTH !== "false";
+  const showCatalogUnauthenticated = process.env.SHOW_CATALOG_UNAUTHENTICATED === "true";
 
-  if (!authBeforeCatalog) {
+  if (!requireAuth) {
+    return NextResponse.next();
+  }
+
+  if (showCatalogUnauthenticated) {
     return NextResponse.next();
   }
 

@@ -17,7 +17,7 @@ spec:
                 name: educates-frontend
                 port:
                   number: 80
-  #@ if data.values.ingress.tlsSecretRef:                
+  #@ if hasattr(data.values, "ingress") and hasattr(data.values.ingress, "tlsSecretRef"):                
   tls:
     - hosts:
       - #@ "portal.{}".format(data.values.domain)

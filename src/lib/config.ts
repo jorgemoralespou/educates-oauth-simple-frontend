@@ -21,13 +21,20 @@ export interface CourseItem {
   workshops: WorkshopItem[];
 }
 
-export interface EducatesConfig {
+export interface LookupServiceConfig {
   lookupServiceUrl: string;
   tenantName: string;
   credentials: {
     username: string;
     password: string;
   };
+}
+
+export interface SessionBouncerConfig {
+  bouncerUrl: string;
+  issuer: string;
+  voucherSigningKey?: string;
+  trustedVoucher?: boolean;
 }
 
 export interface StaticUser {
@@ -40,7 +47,9 @@ export interface SiteConfig {
   title: string;
   description: string;
   homeUrl: string;
-  authBeforeCatalog: boolean;
+  backend: "lookup-service" | "session-bouncer";
+  requireAuth: boolean;
+  showCatalogUnauthenticated?: boolean;
   betterAuth: {
     secret: string;
     baseURL: string;
@@ -64,7 +73,8 @@ export interface SiteConfig {
   logoUrl?: string;
   portals?: PortalItem[];
   courses?: CourseItem[];
-  educates: EducatesConfig;
+  lookupService?: LookupServiceConfig;
+  sessionBouncer?: SessionBouncerConfig;
 }
 
 const CONFIG_DIR = process.env.CONFIG_DIR || join(process.cwd(), "config");
@@ -74,9 +84,54 @@ let siteCache: SiteConfig | null = null;
 export function getSiteConfig(): SiteConfig {
   if (!siteCache) {
     const raw = readFileSync(join(CONFIG_DIR, "site.json"), "utf-8");
-    siteCache = JSON.parse(raw) as SiteConfig;
+    const config = JSON.parse(raw) as SiteConfig;
+    validateSiteConfig(config);
+    siteCache = config;
   }
   return siteCache;
+}
+
+function validateSiteConfig(config: SiteConfig): void {
+  if (!config.backend || !["lookup-service", "session-bouncer"].includes(config.backend)) {
+    throw new Error(
+      `Invalid or missing "backend" in site.json. Must be "lookup-service" or "session-bouncer".`
+    );
+  }
+
+  if (typeof config.requireAuth !== "boolean") {
+    throw new Error(`"requireAuth" must be a boolean in site.json.`);
+  }
+
+  if (config.backend === "lookup-service") {
+    const ls = config.lookupService;
+    if (!ls || !ls.lookupServiceUrl || !ls.tenantName || !ls.credentials?.username || !ls.credentials?.password) {
+      throw new Error(
+        `"lookupService" config is missing or incomplete. Required: lookupServiceUrl, tenantName, credentials.username, credentials.password.`
+      );
+    }
+  }
+
+  if (config.backend === "session-bouncer") {
+    const sb = config.sessionBouncer;
+    if (!sb || !sb.bouncerUrl || !sb.issuer) {
+      throw new Error(
+        `"sessionBouncer" config is missing or incomplete. Required: bouncerUrl, issuer.`
+      );
+    }
+
+    if (!process.env.VOUCHER_SIGNING_KEY && !sb.voucherSigningKey) {
+      throw new Error(
+        `No voucher signing key configured. Set VOUCHER_SIGNING_KEY env var or sessionBouncer.voucherSigningKey in site.json.`
+      );
+    }
+
+    const trustedVoucher = sb.trustedVoucher !== false;
+    if (trustedVoucher && !config.requireAuth) {
+      throw new Error(
+        `When using session-bouncer with trustedVoucher (default), requireAuth must be true (portal needs user email for voucher).`
+      );
+    }
+  }
 }
 
 export function getCourses(): CourseItem[] {

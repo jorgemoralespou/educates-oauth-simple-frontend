@@ -15,7 +15,7 @@ interface WorkshopViewProps {
 
 export function WorkshopView({ session, courseSlug, courseName, courseDescription, workshops, autoLaunchWorkshop }: WorkshopViewProps) {
   const site = getSiteConfig();
-  const homeHref = site.authBeforeCatalog ? "/courses" : "/";
+  const homeHref = site.requireAuth && !site.showCatalogUnauthenticated ? "/courses" : "/";
 
   return (
     <>
@@ -41,7 +41,7 @@ export function WorkshopView({ session, courseSlug, courseName, courseDescriptio
                 image={workshop.image}
                 difficulty={workshop.difficulty}
                 duration={workshop.duration}
-                isAuthenticated={!!session}
+                isAuthenticated={!site.requireAuth || !!session}
                 loginUrl={`/login?returnTo=${encodeURIComponent(`/courses/${encodeURIComponent(courseSlug)}?autoLaunch=${encodeURIComponent(workshop.workshopName)}`)}`}
                 autoLaunch={autoLaunchWorkshop === workshop.workshopName}
                 returnPath={`/courses/${encodeURIComponent(courseSlug)}`}

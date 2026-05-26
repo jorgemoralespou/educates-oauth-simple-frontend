@@ -23,7 +23,11 @@ let tokenExpiresAt = 0;
 const TOKEN_REFRESH_MARGIN_SECONDS = 60;
 
 async function login(): Promise<LoginResponse> {
-  const { educates } = getSiteConfig();
+  const { lookupService } = getSiteConfig();
+  if (!lookupService) {
+    throw new Error("lookupService config is missing");
+  }
+  const educates = lookupService;
 
   const response = await fetch(`${educates.lookupServiceUrl}/auth/login`, {
     method: "POST",
@@ -92,7 +96,11 @@ export async function requestWorkshopSession(
   clientUserId: string,
   clientIndexUrl: string
 ): Promise<WorkshopSessionResponse> {
-  const { educates } = getSiteConfig();
+  const { lookupService } = getSiteConfig();
+  if (!lookupService) {
+    throw new Error("lookupService config is missing");
+  }
+  const educates = lookupService;
 
   const response = await authenticatedFetch(
     `${educates.lookupServiceUrl}/api/v1/workshops`,
