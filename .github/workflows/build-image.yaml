@@ -13,6 +13,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write       # Required for OIDC keyless attestation
       contents: read
       packages: write
 
@@ -42,6 +43,7 @@ jobs:
             type=semver,pattern={{major}}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -50,3 +52,21 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Install Chainloop CLI
+        run: curl -sfL https://dl.chainloop.dev/cli/install.sh | bash -s
+
+      - name: Initialize Chainloop attestation
+        run: |
+          chainloop attestation init \
+            --workflow educates-simple-oauth-frontend \
+            --project educates-simple-oauth-frontend
+
+      - name: Add container image material
+        run: |
+          chainloop attestation add \
+            --name my-container-image \
+            --value ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+      - name: Push attestation
+        run: chainloop attestation push
