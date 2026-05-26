@@ -20,8 +20,8 @@ jobs:
       - name: Init attestation (keyless)
         run: |
           chainloop att init \
-            --project  \
-            --workflow 
+            --project educates-simple-oauth-frontend \
+            --workflow educates-simple-oauth-frontend
 
       - name: Push attestation
         run: chainloop attestation push
