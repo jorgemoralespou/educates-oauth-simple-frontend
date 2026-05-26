@@ -1,16 +1,15 @@
-FROM node:24-trixie AS deps
+FROM node:24-trixie-slim AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-
-FROM node:24-trixie AS builder
-WORKDIR /app
+# Build toolchain for compiling the better-sqlite3 native addon (absent in slim).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN mkdir -p data public && npm run build
 
-FROM node:24-trixie AS runner
+FROM node:24-trixie-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
