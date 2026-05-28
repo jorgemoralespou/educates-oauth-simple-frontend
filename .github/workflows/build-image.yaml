@@ -55,24 +55,26 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Install Cosign
+        # Pinned to v2.x: cosign v3 defaults (new bundle format + TUF signing
+        # config) write signatures as OCI 1.1 referrers, which GHCR does not
+        # support and Chainloop's artifact-signed policy does not read. v3's
+        # `--new-bundle-format=false` is incompatible with the v3 signing-config
+        # default, so the cleanest fix is to stay on v2 where the legacy
+        # `sha256-<digest>.sig` tag is the default.
         uses: sigstore/cosign-installer@v4.1.2
-        
+        with:
+          cosign-release: v2.6.1
+
       - name: Sign container image
-        # cosign v3 defaults to --new-bundle-format=true, which writes a
-        # Sigstore protobuf bundle as an OCI 1.1 referrer. GHCR does not
-        # support the referrers API, and Chainloop's artifact-signed policy
-        # reads the legacy `sha256-<digest>.sig` tag. Force the v2-style
-        # signing path so a discoverable .sig tag is written to the registry.
         run: |
-          cosign sign --yes --new-bundle-format=false \
+          cosign sign --yes \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Verify signature is discoverable in registry
-        # --new-bundle-format=false forces verify through the legacy registry
-        # path; if the .sig tag is missing this fails, catching any future
-        # regression before Chainloop ever sees the image.
+        # Catches future regressions: if the .sig tag is missing in the
+        # registry this step fails before Chainloop ever sees the image.
         run: |
-          cosign verify --new-bundle-format=false \
+          cosign verify \
             --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
