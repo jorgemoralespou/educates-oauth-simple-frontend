@@ -22,11 +22,18 @@ export interface StaticUser {
   name?: string;
 }
 
+export interface SupportConfig {
+  contactEmail?: string;
+  contactUrl?: string;
+}
+
 export interface SiteConfig {
   title: string;
   description: string;
   homeUrl: string;
   authBeforeCatalog: boolean;
+  support?: SupportConfig;
+  showDiagnostics?: boolean;
   betterAuth: {
     secret: string;
     baseURL: string;
