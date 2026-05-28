@@ -3,6 +3,11 @@
   "description": "Access your workshop sessions",
   "homeUrl": "http://localhost:3000",
   "authBeforeCatalog": true,
+  "support": {
+    "contactEmail": "support@educates.dev",
+    "contactUrl": "https://educates.dev/support"
+  },
+  "showDiagnostics": true,
   "betterAuth": {
     "secret": "generate-with-openssl-rand-base64-32",
     "baseURL": "http://localhost:3000"

@@ -3,6 +3,11 @@
   "description": "Access your workshop sessions",
   "homeUrl": "http://localhost:3000",
   "authBeforeCatalog": true,
+  "support": {
+    "contactEmail": "",
+    "contactUrl": ""
+  },
+  "showDiagnostics": false,
   "betterAuth": {
     "secret": "generate-with-openssl-rand-base64-32",
     "baseURL": "http://localhost:3000"
