@@ -58,20 +58,21 @@ jobs:
         uses: sigstore/cosign-installer@v4.1.2
         
       - name: Sign container image
-        env:
-          # GHCR does not implement the OCI 1.1 referrers API (returns 303 on
-          # /v2/<repo>/referrers/<digest>), so cosign v3's default referrers
-          # storage produces no discoverable signature. Force the legacy
-          # `sha256-<digest>.sig` tag scheme that GHCR (and Chainloop's
-          # artifact-signed policy) can find.
-          COSIGN_REGISTRY_REFERRERS_MODE: legacy
+        # cosign v3 defaults to --new-bundle-format=true, which writes a
+        # Sigstore protobuf bundle as an OCI 1.1 referrer. GHCR does not
+        # support the referrers API, and Chainloop's artifact-signed policy
+        # reads the legacy `sha256-<digest>.sig` tag. Force the v2-style
+        # signing path so a discoverable .sig tag is written to the registry.
         run: |
-          cosign sign --yes \
+          cosign sign --yes --new-bundle-format=false \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
       - name: Verify signature is discoverable in registry
+        # --new-bundle-format=false forces verify through the legacy registry
+        # path; if the .sig tag is missing this fails, catching any future
+        # regression before Chainloop ever sees the image.
         run: |
-          cosign verify \
+          cosign verify --new-bundle-format=false \
             --certificate-identity-regexp "^https://github\.com/${{ github.repository }}/" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
