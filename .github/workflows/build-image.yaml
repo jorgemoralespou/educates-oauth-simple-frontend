@@ -147,14 +147,14 @@ jobs:
           chainloop attestation add \
             --name ghas-dep-scan \
             --value ghas-dep-scan.json \
-            --type GHAS_DEPENDENCY_SCAN
+            --kind GHAS_DEPENDENCY_SCAN
 
       - name: Add GHAS Code Scan material
         run: |
           chainloop attestation add \
             --name ghas-code-scan \
             --value ghas-code-scan.json \
-            --type GHAS_CODE_SCAN
+            --kind GHAS_CODE_SCAN
 
       - name: Push attestation
         run: chainloop attestation push
