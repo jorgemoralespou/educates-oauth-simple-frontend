@@ -93,6 +93,30 @@ jobs:
           format: sarif
           output: trivy-results.sarif
 
+      # Export GHAS Dependency Scan results using the GitHub API
+      - name: Export GHAS Dependency Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/dependency-graph/snapshots \
+            > ghas-dep-scan.json
+          # Alternatively, use the code-scanning alerts endpoint:
+          # gh api /repos/${{ github.repository }}/code-scanning/alerts \
+          #   --jq '[.[] | select(.tool.name == "Dependabot")]' \
+          #   > ghas-dep-scan.json
+
+      # Export GHAS Code Scan results using the GitHub API
+      - name: Export GHAS Code Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/code-scanning/alerts \
+            > ghas-code-scan.json
+
       - name: Install Chainloop CLI
         run: curl -sfL https://dl.chainloop.dev/cli/install.sh | bash -s
 
@@ -120,6 +144,20 @@ jobs:
           chainloop attestation add \
             --name vulnerability-report \
             --value trivy-results.sarif
+
+      - name: Add GHAS Dependency Scan material
+        run: |
+          chainloop attestation add \
+            --name ghas-dep-scan \
+            --value ghas-dep-scan.json \
+            --type GHAS_DEPENDENCY_SCAN
+
+      - name: Add GHAS Code Scan material
+        run: |
+          chainloop attestation add \
+            --name ghas-code-scan \
+            --value ghas-code-scan.json \
+            --type GHAS_CODE_SCAN
 
       - name: Push attestation
         run: chainloop attestation push
