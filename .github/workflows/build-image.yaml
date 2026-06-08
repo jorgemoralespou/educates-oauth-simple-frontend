@@ -97,7 +97,7 @@ jobs:
       # Export GHAS Dependency Scan (Dependabot alerts)
       - name: Export GHAS Dependency Scan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_SECURITY_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_SECURITY_PAT }}
         run: |
           gh api \
             -H "Accept: application/vnd.github+json" \
@@ -107,7 +107,7 @@ jobs:
       # Export GHAS Code Scan (CodeQL / code scanning alerts)
       - name: Export GHAS Code Scan
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_SECURITY_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GH_SECURITY_PAT }}
         run: |
           gh api \
             -H "Accept: application/vnd.github+json" \
