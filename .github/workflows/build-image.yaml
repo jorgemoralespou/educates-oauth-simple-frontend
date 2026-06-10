@@ -131,6 +131,15 @@ jobs:
             --name my-container-image \
             --value ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
+          # ── NEW: image SHA and tag as STRING materials ─────────────
+          chainloop attestation add \
+            --name image-sha \
+            --value "${{ steps.build.outputs.digest }}"
+
+          chainloop attestation add \
+            --name image-tag \
+            --value "${{ steps.meta.outputs.tags }}"            
+
       - name: Add SBOM material
         run: |
           chainloop attestation add \
@@ -158,4 +167,13 @@ jobs:
             --kind GHAS_CODE_SCAN
 
       - name: Push attestation
+        if: ${{ success() }}
         run: chainloop attestation push
+
+      - name: Mark attestation as failed
+        if: ${{ failure() }}
+        run: chainloop attestation reset
+
+      - name: Mark attestation as cancelled
+        if: ${{ cancelled() }}
+        run: chainloop attestation reset --trigger cancellation
