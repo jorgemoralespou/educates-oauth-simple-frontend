@@ -166,14 +166,25 @@ jobs:
             --value ghas-code-scan.json \
             --kind GHAS_CODE_SCAN
 
+      # ── Push: finalize the attestation regardless of gate outcome ──
       - name: Push attestation
         if: ${{ success() }}
+        id: attestation-push
+        continue-on-error: true        # ← let push finalize cleanly
         run: chainloop attestation push
 
+      # ── Enforce gate AFTER push has cleanly committed ──────────────
+      - name: Enforce gate result
+        if: ${{ steps.attestation-push.outcome == 'failure' }}
+        run: |
+          echo "ERR Attestation push failed due to policy gate violations"
+          exit 1
+
+      # ── Cleanup: only if push never ran (early pipeline failure) ───
       - name: Mark attestation as failed
-        if: ${{ failure() }}
-        run: chainloop attestation reset
+        if: ${{ failure() && steps.attestation-push.outcome == '' }}
+        run: chainloop attestation reset || true
 
       - name: Mark attestation as cancelled
-        if: ${{ cancelled() }}
-        run: chainloop attestation reset --trigger cancellation
+        if: ${{ cancelled() && steps.attestation-push.outcome == '' }}
+        run: chainloop attestation reset --trigger cancellation || true
